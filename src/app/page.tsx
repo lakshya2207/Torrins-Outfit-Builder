@@ -29,6 +29,15 @@ type ImageCategories = {
 };
 type ImageCategoryKey = keyof ImageCategories;
 
+type Product = {
+  prid: string;
+  name: string;
+  price: number;
+  imgurl: string;
+  zindex?: number;
+  type?: string;
+};
+
 const Page = () => {
   const [dragProductId, setDragProductId] = useState("");
   const [selectedProp, setSelectedProp] = useState<ImageCategoryKey | "">("");
@@ -172,7 +181,7 @@ const Page = () => {
     );
   };
 
-  const handleAddProductToCart = (product: any) => {
+  const handleAddProductToCart = (product: Product) => {
     // Check if product already exists in cart
     const existingProduct = cartProducts.find(p => p.prid === product.prid);
     
