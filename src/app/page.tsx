@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback,} from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { IoClose, IoShirtOutline } from "react-icons/io5";
 import { PiPants } from "react-icons/pi";
 import { TbShoe } from "react-icons/tb";
@@ -14,9 +14,12 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas-pro";
 import products from "@/data/sampleData";
-import { MdOutlineScreenshotMonitor } from "react-icons/md";
+import {  MdOutlineScreenshotMonitor } from "react-icons/md";
+import { MdAddShoppingCart } from "react-icons/md";
 import { FaShoppingCart } from "react-icons/fa";
 import CartDrawer from "@/components/CartDrawer";
+import { toast } from "sonner"; // make sure this import is present
+import { Toaster } from "@/components/ui/sonner";
 
 type ImageCategories = {
   accessories: string[];
@@ -143,31 +146,63 @@ const Page = () => {
     setDragAreaProducts([]);
   };
 
-  const handleAddToCart = () => {
+  const handleAddDragProductsToCart = () => {
+    if (dragAreaProducts.length === 0) {
+      toast.warning("No products in the canvas area");
+      return;
+    }
     setCartOpen(true);
     // Add quantity to each product when copying to cart
-    const productsWithQuantity = dragAreaProducts.map(product => ({
+    const productsWithQuantity = dragAreaProducts.map((product) => ({
       ...product,
-      quantity: 1
+      quantity: 1,
     }));
     setCartProducts(productsWithQuantity);
   };
 
   const handleRemoveFromCart = (prid: string) => {
-    setCartProducts((prev) => prev.filter(product => product.prid !== prid));
+    setCartProducts((prev) => prev.filter((product) => product.prid !== prid));
   };
 
   const handleUpdateQuantity = (prid: string, quantity: number) => {
-    setCartProducts((prev) => 
-      prev.map(product => 
-        product.prid === prid 
-          ? { ...product, quantity } 
-          : product
+    setCartProducts((prev) =>
+      prev.map((product) =>
+        product.prid === prid ? { ...product, quantity } : product
       )
     );
   };
 
+  const handleAddProductToCart = (product: any) => {
+    // Check if product already exists in cart
+    const existingProduct = cartProducts.find(p => p.prid === product.prid);
+    
+    if (existingProduct) {
+      // If product exists, increase quantity
+      setCartProducts((prev) =>
+        prev.map((p) =>
+          p.prid === product.prid ? { ...p, quantity: p.quantity + 1 } : p
+        )
+      );
+      toast.success(`${product.name} quantity increased in cart`);
+    } else {
+      // If product doesn't exist, add it with quantity 1
+      const newProduct = {
+        prid: product.prid,
+        imgurl: product.imgurl,
+        name: product.name,
+        price: product.price || 1,
+        quantity: 1,
+      };
+      setCartProducts((prev) => [...prev, newProduct]);
+      toast.success(`${product.name} added to cart`);
+    }
+  };
+
   const takeScreenshot = async () => {
+    if (dragAreaProducts.length === 0) {
+      toast.warning("No products in the canvas area");
+      return;
+    }
     if (canvasRef.current) {
       const canvas = await html2canvas(canvasRef.current);
       const imgData = canvas.toDataURL("image/png");
@@ -179,8 +214,6 @@ const Page = () => {
       link.click();
     }
   };
-
-
 
   return (
     <div className="main h-svh w-screen flex items-center justify-around flex-col bg-gray-100 text-center relative">
@@ -263,8 +296,19 @@ const Page = () => {
                     getProductsByType(selectedProp).map((product) => (
                       <div
                         key={product.prid}
-                        className="flex flex-col items-center justify-center h-full mx-auto w-5/6 p-1 rounded shadow-md"
+                        className="relative flex flex-col items-center justify-center h-full mx-auto w-5/6 p-1 rounded shadow-md"
                       >
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            className="absolute top-1 right-1 p-1 z-10 bg-white hover:bg-gray-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddProductToCart(product);
+                            }}
+                          >
+                            <MdAddShoppingCart size={12}/> 
+                          </Button>
                         <Image
                           src={product.imgurl}
                           alt={product.name}
@@ -295,10 +339,7 @@ const Page = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <div
-              
-                className="w-full h-full relative"
-              >
+              <div className="w-full h-full relative">
                 {dragAreaProducts.length > 0 ? (
                   dragAreaProducts.map((product, index) => (
                     <motion.div
@@ -379,7 +420,7 @@ const Page = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={handleAddToCart}
+              onClick={handleAddDragProductsToCart}
               className="w-5/12"
             >
               <FaShoppingCart />
@@ -396,6 +437,7 @@ const Page = () => {
         onRemoveProduct={handleRemoveFromCart}
         onUpdateQuantity={handleUpdateQuantity}
       />
+       <Toaster position="top-right" />
     </div>
   );
 };
