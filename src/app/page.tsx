@@ -355,7 +355,7 @@ const Page = () => {
                       key={product.prid}
                       drag
                       dragConstraints={canvasRef}
-                      className={`absolute t-0 l-0 cursor-${
+                      className={`absolute cursor-${
                         draggingIndex === index ? "grabbing" : "grab"
                       } resize overflow-hidden border border-gray-300 bg-white`}
                       onDragStart={() => {
@@ -392,7 +392,7 @@ const Page = () => {
                         src={product.imgurl}
                         alt={`Dropped item ${index + 1}`}
                         fill
-                        className="object-cover select-none pointer-events-none z-0 "
+                        className="object-cover select-none pointer-events-none z-0 h-50 w-50"
                         draggable={false}
                         style={{
                           imageRendering: "auto",
