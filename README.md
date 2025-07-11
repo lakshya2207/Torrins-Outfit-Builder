@@ -1,162 +1,66 @@
-👗 Outfit Builder – Interactive Fashion Design Tool
-A modern, feature-rich web app for creating and customizing fashion outfits. Includes drag-and-drop functionality, zoom controls, a shopping cart, and export options — all in a clean, responsive interface.
+# 👗 Outfit Builder – Interactive Fashion Design Tool
 
-🚀 Quick Start
-Prerequisites
-Node.js (v18+)
+## 🚀 How to Download & Run the Project
 
-npm or yarn
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/lakshya2207/Torrins-Outfit-Builder
+   cd assignment
+   ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+4. Open your browser at [http://localhost:3000](http://localhost:3000)
 
-Installation
-bash
-Copy
-Edit
-git clone <repository-url>
-cd assignment
-npm install
-npm run dev
-Open your browser at http://localhost:3000.
+---
 
-🎯 Core Features
-🛍 Product Management
-Categories: Accessories, Tops, Bottoms, Shoes
+## ✨ Current Features
 
-Sidebar displays: Image, Name, Price
+- **Product Sidebar:**
+  - Filter by type: Accessories, Tops, Bottoms, Shoes
+  - View product image, name, and price
+  - Add individual products to cart
 
-Category-based filtering
+- **Drag & Drop Canvas:**
+  - Drag products from sidebar to canvas (no duplicates)
+  - Tap/long-press support for mobile
+  - Layering: bring items to front (z-index)
+  - Move and scale items freely
+  - Zoom modal for scaling (0.0x–2.0x)
+  - Responsive, mobile-friendly UI
 
-Organized product data (ID, Name, Price, Image URL, Type)
+- **Shopping Cart (Drawer):**
+  - Add all canvas products to cart at once
+  - Quantity controls (+/-) for each product
+  - Remove products from cart
+  - Total price calculation
+  - Cart and canvas state are always separate
 
-🖱 Drag & Drop Canvas
-Drag items from sidebar to canvas
+- **Export & Screenshot:**
+  - Save canvas as PNG image
 
-Prevent duplicate items
+- **Notifications:**
+  - Toasts for cart actions and errors
 
-Visual feedback while dragging
+- **Type Safety:**
+  - All product logic uses a strict `Product` type
 
-Defined drop zone with styling
+---
 
-🖼 Canvas Area
-Resizable workspace
+## 📬 Contact
 
-Move and scale items freely
+- **Lakshya Sharma**
+- 📞 7906396246
+- 📧 [lakshyasharma1928@gmail.com](mailto:lakshyasharma1928@gmail.com)
+- 🌐 [Portfolio](https://lakshyaportfolio-mu.vercel.app/)
+- 🧑‍💻 [Linkedin](https://www.linkedin.com/in/lakshya2207)
 
-Click to bring to front (Z-index control)
+---
 
-Responsive and interactive layout
-
-🛒 Shopping Cart
-Add canvas products to cart (non-destructive)
-
-Modify item quantities (+/-)
-
-Remove individual products
-
-Slide-in cart drawer
-
-Total price auto-calculation
-
-📸 Export Feature
-Export canvas as PNG
-
-Resize canvas before export
-
-Uses html2canvas-pro for image generation
-
-🧰 Tech Stack
-Frontend: React 18 (TypeScript)
-
-Framework: Next.js 15 (App Router)
-
-Styling: Tailwind CSS
-
-UI Library: Shadcn UI
-
-Animation: Framer Motion
-
-Image Export: html2canvas-pro
-
-Icons: React Icons, Lucide React
-
-📁 Project Structure
-bash
-Copy
-Edit
-assignment/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx         # Main app page
-│   │   └── test/page.tsx    # Layering test page
-│   ├── components/
-│   │   ├── CartDrawer.tsx
-│   │   ├── ZoomModal.tsx
-│   │   └── ui/
-│   └── data/sampleData.js   # Product definitions
-├── public/
-│   ├── accessories/
-│   ├── tops/
-│   ├── bottoms/
-│   └── shoes/
-└── package.json
-⚙️ Development Commands
-bash
-Copy
-Edit
-npm install        # Install dependencies
-npm run dev        # Run development server
-npm run build      # Build for production
-npm start          # Start production server
-npm run lint       # Run lint checks
-🎨 Customization
-➕ Add New Products
-Add images to /public/[category]/
-
-Update src/data/sampleData.js with:
-
-js
-Copy
-Edit
-{
-  prid: "unique-id",
-  name: "Product Name",
-  price: 29.99,
-  imgurl: "/[category]/image.png",
-  type: "category"
-}
-🎨 Modify Styling
-Update Tailwind classes in components
-
-Global styles in src/app/globals.css
-
-🛠 Add New Features
-Extend product schema in sampleData.js
-
-Add components in src/components/
-
-Update logic in src/app/page.tsx
-
-🤝 Contributing
-Fork the repository
-
-Create a feature branch
-
-Make your changes
-
-Test thoroughly
-
-Submit a pull request
-
-📄 License
-Licensed under the MIT License.
-
-Built with ❤️ using React, Next.js, and Tailwind CSS
-
-📬 Contact
-📞 Phone: 7906396246
-
-📧 Email: lakshyasharma1928@gmail.com
-
-🌐 Portfolio: lakshya2207
-
-🧑‍💻 GitHub: lakshya2207
+> _Built with Next.js, React, TypeScript, Tailwind CSS, and shadcn/ui._
 
