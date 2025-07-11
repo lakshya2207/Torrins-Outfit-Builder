@@ -14,7 +14,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas-pro";
 import products from "@/data/sampleData";
-import {  MdOutlineScreenshotMonitor } from "react-icons/md";
+import { MdOutlineScreenshotMonitor } from "react-icons/md";
 import { MdAddShoppingCart } from "react-icons/md";
 import { FaShoppingCart } from "react-icons/fa";
 import CartDrawer from "@/components/CartDrawer";
@@ -183,8 +183,8 @@ const Page = () => {
 
   const handleAddProductToCart = (product: Product) => {
     // Check if product already exists in cart
-    const existingProduct = cartProducts.find(p => p.prid === product.prid);
-    
+    const existingProduct = cartProducts.find((p) => p.prid === product.prid);
+
     if (existingProduct) {
       // If product exists, increase quantity
       setCartProducts((prev) =>
@@ -307,17 +307,17 @@ const Page = () => {
                         key={product.prid}
                         className="relative flex flex-col items-center justify-center h-full mx-auto w-5/6 p-1 rounded shadow-md"
                       >
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            className="absolute top-1 right-1 p-1 z-10 bg-white hover:bg-gray-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddProductToCart(product);
-                            }}
-                          >
-                            <MdAddShoppingCart size={12}/> 
-                          </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="absolute top-1 right-1 p-1 z-10 bg-white hover:bg-gray-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddProductToCart(product);
+                          }}
+                        >
+                          <MdAddShoppingCart size={12} />
+                        </Button>
                         <Image
                           src={product.imgurl}
                           alt={product.name}
@@ -344,18 +344,18 @@ const Page = () => {
             </h3>
             <div
               ref={canvasRef}
-              className="flex h-10/12 w-11/12 mx-auto font-semibold text-gray-400 bg-white border-dashed border-2 rounded-md droparea relative p-4 overflow-auto"
+              className="flex h-10/12 max-h-10/12 max-w-11/12 resize mx-auto font-semibold text-gray-400 bg-white border-dashed border-2 rounded-md droparea relative p-4 overflow-scroll"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <div className="w-full h-full relative">
+              {/* <div className="w-full h-full relative flex flex-wrap"> */}
                 {dragAreaProducts.length > 0 ? (
                   dragAreaProducts.map((product, index) => (
                     <motion.div
                       key={product.prid}
                       drag
                       dragConstraints={canvasRef}
-                      className={`absolute cursor-${
+                      className={`absolute t-0 l-0 cursor-${
                         draggingIndex === index ? "grabbing" : "grab"
                       } resize overflow-hidden border border-gray-300 bg-white`}
                       onDragStart={() => {
@@ -406,7 +406,7 @@ const Page = () => {
                     <span>Drag & Drop the props here</span>
                   </div>
                 )}
-              </div>
+              {/* </div> */}
             </div>
           </div>
         </div>
@@ -446,7 +446,7 @@ const Page = () => {
         onRemoveProduct={handleRemoveFromCart}
         onUpdateQuantity={handleUpdateQuantity}
       />
-       <Toaster position="top-right" />
+      <Toaster position="top-right" />
     </div>
   );
 };
