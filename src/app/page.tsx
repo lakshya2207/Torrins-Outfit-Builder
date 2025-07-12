@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
-import { IoClose, IoShirtOutline } from "react-icons/io5";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { IoShirtOutline } from "react-icons/io5";
 import { PiPants } from "react-icons/pi";
 import { TbShoe } from "react-icons/tb";
 import { BsHandbag } from "react-icons/bs";
@@ -10,7 +10,6 @@ import { RiGlassesFill } from "react-icons/ri";
 import { PiBelt } from "react-icons/pi";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas-pro";
 import products from "@/data/sampleData";
@@ -20,7 +19,20 @@ import { FaShoppingCart } from "react-icons/fa";
 import CartDrawer from "@/components/CartDrawer";
 import { toast } from "sonner"; // make sure this import is present
 import { Toaster } from "@/components/ui/sonner";
+import ReactFlow, {
+  Controls,
+  Background,
+  Node,
+  Edge,
+  applyNodeChanges,
+  NodeChange,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import ImageNode from "@/components/ImageNode";
 
+const nodeTypes = {
+  imageNode: ImageNode,
+};
 type ImageCategories = {
   accessories: string[];
   tops: string[];
@@ -41,14 +53,7 @@ type Product = {
 const Page = () => {
   const [dragProductId, setDragProductId] = useState("");
   const [selectedProp, setSelectedProp] = useState<ImageCategoryKey | "">("");
-  const [dragAreaProducts, setDragAreaProducts] = useState<
-    Array<{
-      prid: string;
-      imgurl: string;
-      name: string;
-      price: number;
-    }>
-  >([]);
+
   const [cartProducts, setCartProducts] = useState<
     Array<{
       prid: string;
@@ -58,17 +63,7 @@ const Page = () => {
       quantity: number;
     }>
   >([]);
-  const [zIndices, setZIndices] = useState<Record<string, number>>({});
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  // const [layers, setlayers] = useState([1, 2, 3]);
-  // const [selectedLayer, setSelectedLayer] = useState(1);
-  // const [zoomModalOpen, setZoomModalOpen] = useState(false);
-  // const [selectedProductForZoom, setSelectedProductForZoom] = useState<{
-  //   prid: string;
-  //   imgurl: string;
-  //   name: string;
-  //   scale: number;
-  // } | null>(null);
+
   const [cartOpen, setCartOpen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -78,95 +73,47 @@ const Page = () => {
   };
 
   // Bring product to front
-  const bringToFront = useCallback((prid: string) => {
-    setZIndices((prev) => {
-      const maxZ =
-        Object.values(prev).length > 0 ? Math.max(...Object.values(prev)) : 0;
-      if (prev[prid] === maxZ) return prev; // Already on top
-      console.log(`Bringing ${prid} to front. Current max z-index: ${maxZ}`);
-      return { ...prev, [prid]: maxZ + 1 };
-    });
-  }, []);
 
-  const handleSelect = (prop: ImageCategoryKey | "") => {
+  const handleSelectProductType = (prop: ImageCategoryKey | "") => {
     setSelectedProp(prop);
   };
 
-  const handleRemoveImage = (index: number) => {
-    setDragAreaProducts((prev) => {
-      const newProducts = prev.filter((ele, i) => index != i);
-      // Update zIndices to remove the deleted product
-      const productToRemove = prev[index];
-      if (productToRemove) {
-        setZIndices((prevZ) => {
-          const newZ = { ...prevZ };
-          delete newZ[productToRemove.prid];
-          return newZ;
-        });
-      }
-      return newProducts;
-    });
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (dragProductId) {
-      const product = products.find((p) => p.prid === dragProductId);
-      if (product) {
-        setDragAreaProducts((prev) => {
-          // Check if product already exists in drag area
-          const productExists = prev.some(
-            (existingProduct) => existingProduct.prid === product.prid
-          );
-          if (productExists) {
-            return prev; // Don't add if already exists
-          }
-
-          // Add new item and initialize its z-index
-          console.log(`Adding new product: ${product.prid}`);
-          const newProduct = {
-            prid: product.prid,
-            imgurl: product.imgurl,
-            name: product.name,
-            price: product.price || 1,
-          };
-
-          // Initialize z-index for the new product
-          setZIndices((prevZ) => {
-            const maxZ =
-              Object.values(prevZ).length > 0
-                ? Math.max(...Object.values(prevZ))
-                : 0;
-            return { ...prevZ, [product.prid]: maxZ + 1 };
-          });
-
-          return [...prev, newProduct];
-        });
-        setDragProductId("");
-      }
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
   const handleReset = () => {
-    setDragAreaProducts([]);
+    setNodes([]);
   };
 
-  const handleAddDragProductsToCart = () => {
-    if (dragAreaProducts.length === 0) {
+  const handleAddAllToCart = () => {
+    if (nodes.length === 0) {
       toast.warning("No products in the canvas area");
       return;
     }
+
     setCartOpen(true);
-    // Add quantity to each product when copying to cart
-    const productsWithQuantity = dragAreaProducts.map((product) => ({
-      ...product,
-      quantity: 1,
-    }));
-    setCartProducts(productsWithQuantity);
+
+    const nodeIds = nodes.map((node) => node.id);
+    const productsToAdd = products.filter((product) =>
+      nodeIds.includes(product.prid)
+    );
+
+    setCartProducts((prevCart) => {
+      const updatedCart = [...prevCart];
+
+      productsToAdd.forEach((product) => {
+        const existingProductIndex = updatedCart.findIndex(
+          (p) => p.prid === product.prid
+        );
+
+        if (existingProductIndex !== -1) {
+          // Increment quantity
+          updatedCart[existingProductIndex].quantity += 1;
+        } else {
+          // Add new product with quantity 1
+          updatedCart.push({ ...product, quantity: 1 });
+        }
+      });
+
+      return updatedCart;
+    });
   };
 
   const handleRemoveFromCart = (prid: string) => {
@@ -181,7 +128,7 @@ const Page = () => {
     );
   };
 
-  const handleAddProductToCart = (product: Product) => {
+  const handleAddSingleToCart = (product: Product) => {
     // Check if product already exists in cart
     const existingProduct = cartProducts.find((p) => p.prid === product.prid);
 
@@ -208,7 +155,7 @@ const Page = () => {
   };
 
   const takeScreenshot = async () => {
-    if (dragAreaProducts.length === 0) {
+    if (nodes.length === 0) {
       toast.warning("No products in the canvas area");
       return;
     }
@@ -221,6 +168,59 @@ const Page = () => {
       link.href = imgData;
       link.download = "screenshot.png";
       link.click();
+    }
+  };
+
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges] = useState<Edge[]>([]);
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) =>
+      setNodes((nds) => applyNodeChanges(changes, nds)),
+    []
+  );
+  useEffect(() => {
+    console.log("nodes", nodes);
+  }, [nodes]);
+  useEffect(() => {
+    console.log("dragProductId", dragProductId);
+  }, [dragProductId]);
+  const handleRemoveNode = (prid: string) => {
+    setNodes((prev) => prev.filter((node) => node.id !== prid));
+  };
+  const handleDrop = (e: React.DragEvent | React.TouchEvent) => {
+    e.preventDefault();
+    console.log("enteredondrop");
+    if (dragProductId) {
+      console.log("dragProductId", dragProductId);
+
+      const product = products.find((prod) => prod.prid == dragProductId);
+      if (product) {
+        const newNode = {
+          id: dragProductId,
+          type: "imageNode",
+          position: { x: 0, y: 0 },
+          data: {
+            imageURL: product.imgurl,
+            deleteNode: handleRemoveNode,
+          },
+        };
+        setNodes((prev) => [...prev, newNode]);
+      }
+      setDragProductId("");
+    }
+  };
+  const handleTouchEndDrop = (e: React.TouchEvent, productId: string) => {
+    const touch = e.changedTouches[0];
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    const dropTarget = document.elementFromPoint(x, y);
+
+    if (canvasRef.current?.contains(dropTarget)) {
+      setDragProductId(productId); // set the ID being "dropped"
+
+      // Simulate a drop event for handleDrop
+      handleDrop(e);
     }
   };
 
@@ -244,17 +244,17 @@ const Page = () => {
       </div>
       <h1 className="font-bold text-4xl h-1/12 ">Outfit Builder</h1>
 
-      <div className="box flex flex-col bg-white justify-around rounded-4xl inset-shadow-sm/10 gap-2 h-10/12 md:w-10/12">
-        <div className="section1 w-full flex justify-between items-center gap-2 h-10/12">
-          <div className="sidebar w-1/5 h-10/12 p-2 flex flex-col text-sm text-gray-700 font-semibold ">
+      <div className="box flex flex-col bg-white justify-around rounded-4xl inset-shadow-sm/10 gap-2 md:h-10/12 h-11/12 md:w-10/12 w-full">
+        <div className="section1 w-full md:h-10/12 h-10/12 flex flex-col-reverse md:flex-row md:justify-around justify-between items-center gap-2 ">
+          <div className="sidebar md:w-1/5 w-5/6 md:h-10/12 h-2/12 p-2 flex md:flex-col flex-row text-sm text-gray-700 font-semibold ">
             {selectedProp === "" ? (
               <>
                 <Button
                   variant="outline"
-                  className="items h-1/4 m-1 flex flex-col items-center justify-around rounded-md "
-                  onClick={() => handleSelect("accessories")}
+                  className="items md:h-1/4 h-full m-1 flex flex-col items-center justify-around rounded-md "
+                  onClick={() => handleSelectProductType("accessories")}
                 >
-                  <div className="grid grid-cols-2 grid-rows-2 gap-1">
+                  <div className="grid grid-cols-2 gap-1">
                     <BsHandbag size={18} />
                     <PiBaseballCap size={18} />
                     <RiGlassesFill size={18} />
@@ -264,24 +264,24 @@ const Page = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="items h-1/4 m-1 flex flex-col items-center justify-center rounded-md "
-                  onClick={() => handleSelect("tops")}
+                  className="items  md:h-1/4 h-full m-1 flex flex-col items-center justify-center rounded-md "
+                  onClick={() => handleSelectProductType("tops")}
                 >
                   <IoShirtOutline size={35} />
                   Tops
                 </Button>
                 <Button
                   variant="outline"
-                  className="items h-1/4 m-1 flex flex-col items-center justify-center rounded-md"
-                  onClick={() => handleSelect("bottoms")}
+                  className="items  md:h-1/4 h-full m-1 flex flex-col items-center justify-center rounded-md"
+                  onClick={() => handleSelectProductType("bottoms")}
                 >
                   <PiPants size={35} />
                   Bottom
                 </Button>
                 <Button
                   variant="outline"
-                  className="items h-1/4 m-1 flex flex-col items-center justify-center rounded-md"
-                  onClick={() => handleSelect("shoes")}
+                  className="items  md:h-1/4 h-full m-1 flex flex-col items-center justify-center rounded-md"
+                  onClick={() => handleSelectProductType("shoes")}
                 >
                   <TbShoe size={35} />
                   Shoes
@@ -293,14 +293,14 @@ const Page = () => {
                   variant="outline"
                   size="icon"
                   className="size-8"
-                  onClick={() => handleSelect("")}
+                  onClick={() => handleSelectProductType("")}
                 >
                   <IoIosArrowRoundBack
                     size={30}
                     // className="border-b-1 border-gray-400 z-10 w-full"
                   />
                 </Button>
-                <div className="grid grid-cols-1 overflow-y-scroll gap-2">
+                <div className=" flex md:grid md:grid-cols-1 overflow-y-hidden md:overflow-y-scroll overflow-x-scroll gap-2">
                   {selectedProp &&
                     getProductsByType(selectedProp).map((product) => (
                       <div
@@ -310,10 +310,10 @@ const Page = () => {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="absolute top-1 right-1 p-1 z-10 bg-white hover:bg-gray-50"
+                          className="absolute top-0 md:top-1 right-0 md:right-1 p-1 z-10 bg-white hover:bg-gray-50 not-md:scale-75"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleAddProductToCart(product);
+                            handleAddSingleToCart(product);
                           }}
                         >
                           <MdAddShoppingCart size={12} />
@@ -323,8 +323,13 @@ const Page = () => {
                           alt={product.name}
                           width={35}
                           height={35}
-                          className="object-contain  mb-1"
+                          className="object-contain h-10 w-10 mb-1"
                           onDragStart={() => setDragProductId(product.prid)}
+                          onTouchMove={() => setDragProductId(product.prid)}
+                          onTouchEnd={(e) =>
+                            handleTouchEndDrop(e, product.prid)
+                          } // 🧠 new function here
+                          onContextMenu={(e) => e.preventDefault()} // 👈 disables right-click / long-press menu
                         />
                         <div className="text-xs text-center">
                           <div className="font-semibold truncate">
@@ -338,98 +343,52 @@ const Page = () => {
               </>
             )}
           </div>
-          <div className="preview w-4/5 h-full border-l-2">
+          <div className="preview w-4/5 md:h-full h-9/12 md:border-l-2">
             <h3 className="font-semibold h-1/12 text-lg text-gray-700 mt-2">
               Canvas Area
             </h3>
-            <div
+            <ReactFlow
               ref={canvasRef}
-              className="flex h-10/12 max-h-10/12 max-w-11/12 resize mx-auto font-semibold text-gray-400 bg-white border-dashed border-2 rounded-md droparea relative p-4 overflow-scroll"
-              onDragOver={handleDragOver}
+              className="mx-auto border-dashed border-2 rounded-md h-10/12 max-h-10/12 max-w-11/12 resize"
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              nodeTypes={nodeTypes}
               onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()} // <== Important!
             >
-              {/* <div className="w-full h-full relative flex flex-wrap"> */}
-                {dragAreaProducts.length > 0 ? (
-                  dragAreaProducts.map((product, index) => (
-                    <motion.div
-                      key={product.prid}
-                      drag
-                      dragConstraints={canvasRef}
-                      className={`absolute cursor-${
-                        draggingIndex === index ? "grabbing" : "grab"
-                      } resize overflow-hidden border border-gray-300 bg-white`}
-                      onDragStart={() => {
-                        setDraggingIndex(index);
-                        bringToFront(product.prid);
-                      }}
-                      onMouseDown={() => {
-                        bringToFront(product.prid);
-                      }}
-                      onDragEnd={() => {
-                        setDraggingIndex(null);
-                      }}
-                      style={{
-                        zIndex: zIndices[product.prid],
-                        width: 150,
-                        height: 150,
-                        resize: "both",
-                        overflow: "hidden",
-                        position: "relative", // ensures absolute children are scoped here
-                      }}
-                    >
-                      {/* Close Button */}
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="absolute -top-2 -right-2 z-[9999]" // Max z-index locally
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <IoClose />
-                      </Button>
-
-                      {/* Image */}
-                      <Image
-                        src={product.imgurl}
-                        alt={`Dropped item ${index + 1}`}
-                        fill
-                        className="object-cover select-none pointer-events-none z-0 h-50 w-50"
-                        draggable={false}
-                        style={{
-                          imageRendering: "auto",
-                        }}
-                      />
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full w-full text-xs text-center">
-                    <span>Select the props from menu at the left side</span>
-                    <span>Drag & Drop the props here</span>
-                  </div>
-                )}
-              {/* </div> */}
-            </div>
+              <Background />
+              <Controls />
+            </ReactFlow>
+            <p className="font-semibold text-gray-400 text-xs">
+              Select and drop the Products from Sidebar to above to
+              visualize,rezise it.
+              <br />
+              To save the Outfit Combination, first resize and centerise the
+              canvas area and hit Save Outfit button
+            </p>
           </div>
         </div>
-        <div className="section2 w-full h-2/12 items-center justify-around flex origin-bottom">
+        <div className="section2 w-full md:h-2/12 h-2/12 items-center justify-around flex origin-bottom">
           <Button
             variant="outline"
-            className="w-1/6 mx-2"
+            className="w-1/6 mx-2 not-md:mb-10"
             onClick={handleReset}
           >
             Reset
           </Button>
-          <div className="w-4/5 flex justify-around">
+          <div className="w-4/5 flex justify-around not-md:mb-10">
             <Button
               variant="outline"
               className="w-5/12"
               onClick={takeScreenshot}
             >
               <MdOutlineScreenshotMonitor />
-              SaveOutfit
+              Save Outfit
             </Button>
             <Button
               variant="outline"
-              onClick={handleAddDragProductsToCart}
+              onClick={handleAddAllToCart}
               className="w-5/12"
             >
               <FaShoppingCart />
