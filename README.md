@@ -26,12 +26,14 @@
   - View product image, name, and price
   - Add individual products to cart
 
-- **Drag & Drop Canvas:**
-  - Drag products from sidebar to canvas (no duplicates)
-  - Tap/long-press support for mobile
-  - Layering: bring items to front (z-index)
-  - Move and scale items freely
-  - Responsive, mobile-friendly UI
+- **Dragarea Features:**
+
+  - Drag, drop, move, zoom, and delete product nodes on the canvas with full support for both PC and mobile devices.
+  - Product images can be resized **only on PC**; resizing is disabled on mobile for better touch experience.
+  - Nodes are layered using React Flow’s built-in z-index management.
+  - Responsive and touch-friendly UI, including tap and long-press gestures on mobile.
+
+
 
 - **Shopping Cart (Drawer):**
   - Add all canvas products to cart at once
