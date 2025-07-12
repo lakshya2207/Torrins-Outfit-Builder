@@ -31,7 +31,6 @@
   - Tap/long-press support for mobile
   - Layering: bring items to front (z-index)
   - Move and scale items freely
-  - Zoom modal for scaling (0.0x–2.0x)
   - Responsive, mobile-friendly UI
 
 - **Shopping Cart (Drawer):**
