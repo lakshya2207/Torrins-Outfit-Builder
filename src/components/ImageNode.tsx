@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { NodeProps } from "reactflow";
 import Image from "next/image";
 import { Button } from "./ui/button";
@@ -9,10 +9,12 @@ type ImageNodeData = {
   imageURL: string;
   deleteNode?: (id: string) => void;
   name?: string;
+  dimensions:{height:number,width:number}
 };
 
 const ImageNode = ({ id, data }: NodeProps<ImageNodeData>) => {
-  const [size, setSize] = useState({ width: 150, height: 150 });
+  const [size, setSize] = useState({ width: data.dimensions.width, height: data.dimensions.height });
+
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const handleResize = () => {
@@ -24,12 +26,42 @@ const ImageNode = ({ id, data }: NodeProps<ImageNodeData>) => {
     }
   };
 
+    useEffect(() => {
+    // const img = new window.Image();
+    // img.src = data.imageURL;
+
+    // img.onload = () => {
+    //   let l = 0,b = 0;
+    //   l = 200;
+    //   b =  (img.naturalWidth / img.naturalHeight) * 200
+
+    //   setOriginalSize({
+    //     width: l,
+    //     height: b,
+    //   });
+    //   console.log("img.naturalWidth", l);
+    //   console.log("img.naturalHeigth", b);
+
+    //   // Optionally set size to original if desired:
+    //   setSize({
+    //     height: l,
+    //     width: b,
+    //   });
+    // };
+    console.log('data.dimensions',data.dimensions);
+    
+  }, [data.dimensions]);
+
   return (
     <div
       ref={nodeRef}
       onMouseUp={handleResize}
-      style={{ width: size.width, height: size.height, resize: "both" }}
-      className="relative max-w-[400px] max-h-[400px] overflow-hidden rounded-lg shadow-sm bg-white"
+      style={{
+        width: size.width,
+        height: size.height,
+        resize: "both",
+      }}
+      className="relative overflow-hidden rounded-lg shadow-sm bg-white"
     >
       <Button
         variant="ghost"

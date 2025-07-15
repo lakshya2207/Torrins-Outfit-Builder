@@ -189,22 +189,53 @@ const Page = () => {
   };
   const handleDrop = (e: React.DragEvent | React.TouchEvent) => {
     e.preventDefault();
-    console.log("enteredondrop");
+    let x = 0;
+    let y = 0;
+
+    // Get the position of the mouse or touch
+    if ("clientX" in e && "clientY" in e) {
+      x = e.clientX;
+      y = e.clientY;
+    } else if ("touches" in e && e.touches.length > 0) {
+      x = e.touches[0].clientX;
+      y = e.touches[0].clientY;
+    }
+
+    // Get the canvas position and calculate the relative drop position
+    if (canvasRef.current) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      x -= canvasRect.left;
+      y -= canvasRect.top;
+    }
+
     if (dragProductId) {
       console.log("dragProductId", dragProductId);
 
       const product = products.find((prod) => prod.prid == dragProductId);
       if (product) {
-        const newNode = {
-          id: dragProductId,
-          type: "imageNode",
-          position: { x: 0, y: 0 },
-          data: {
-            imageURL: product.imgurl,
-            deleteNode: handleRemoveNode,
-          },
+        const img = new window.Image();
+        img.src = product.imgurl;
+
+        let l = 0,
+          b = 0;
+        img.onload = () => {
+          l = 200;
+          b = (img.naturalWidth / img.naturalHeight) * 200;
+          console.log("l", l);
+          console.log("b", b);
+          
+          const newNode = {
+            id: dragProductId,
+            type: "imageNode",
+            position: { x: x-b/2, y: y-l/2 },
+            data: {
+              imageURL: product.imgurl,
+              deleteNode: handleRemoveNode,
+              dimensions: { height: l, width: b },
+            },
+          };
+          setNodes((prev) => [...prev, newNode]);
         };
-        setNodes((prev) => [...prev, newNode]);
       }
       setDragProductId("");
     }
@@ -360,22 +391,26 @@ const Page = () => {
               <Background />
               <Controls />
             </ReactFlow>
-           <p className="font-semibold text-gray-400 text-xs">
-  {/* Desktop instructions */}
-  <span className="hidden md:inline">
-    Select and drag products from the sidebar (left) into the canvas above to visualize and resize them.
-    <br />
-    To save your outfit, first resize and center the canvas view, then click the <span className="text-gray-500">Save Outfit</span> button.
-  </span>
+            <p className="font-semibold text-gray-400 text-xs">
+              {/* Desktop instructions */}
+              <span className="hidden md:inline">
+                Select and drag products from the sidebar (left) into the canvas
+                above to visualize and resize them.
+                <br />
+                To save your outfit, first resize and center the canvas view,
+                then click the{" "}
+                <span className="text-gray-500">Save Outfit</span> button.
+              </span>
 
-  {/* Mobile instructions */}
-  <span className="inline md:hidden">
-    Tap and drag products from the list below into the canvas above to visualize them. Resizing is not available on mobile.
-    <br />
-    To save your outfit, center the canvas view, then tap the <span className="text-gray-500">Save Outfit</span> button.
-  </span>
-</p>
-
+              {/* Mobile instructions */}
+              <span className="inline md:hidden">
+                Tap and drag products from the list below into the canvas above
+                to visualize them. Resizing is not available on mobile.
+                <br />
+                To save your outfit, center the canvas view, then tap the{" "}
+                <span className="text-gray-500">Save Outfit</span> button.
+              </span>
+            </p>
           </div>
         </div>
         <div className="section2 w-full md:h-2/12 h-2/12 items-center justify-around flex origin-bottom">
